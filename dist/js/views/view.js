@@ -3,7 +3,7 @@ export class View {
         this.elemento = document.querySelector(seletor);
     }
     template(modelo) {
-        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template'");
+        throw Error("Classe filha precisa implementar o método template");
     }
     atualiza(modelo) {
         const template = this.template(modelo);

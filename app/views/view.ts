@@ -1,15 +1,15 @@
-export class View<Typo> {
+export class View<Type> {
     protected elemento: HTMLElement;
 
     constructor(seletor: string) {
         this.elemento = document.querySelector(seletor);
     }
 
-    template(modelo: Typo): string {
-        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template'");
+    template(modelo: Type): string {
+        throw Error("Classe filha precisa implementar o método template");
     }
 
-    atualiza(modelo: Typo): void {
+    atualiza(modelo: Type): void {
         const template = this.template(modelo);
         this.elemento.innerHTML = template;
     }
