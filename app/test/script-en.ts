@@ -8,27 +8,19 @@
 */
 
 class Negotiation {
-    private _date: Date;
-    private _quantify: number;
-    private _value: number;
-
-    constructor(date: Date, quantify: number, value: number) {
-        this._date = date;
-        this._quantify = quantify;
-        this._value = value
-    }
+   constructor(
+        private _date: Date,
+        public readonly quantify: number,
+        public readonly value: number
+   ) {}
 
     get date(): Date {
-        return this._date;
+        const date = new Date(this._date.getTime());
+        return date;
     }
-    get quantify(): number {
-        return this._quantify;
-    }
-    get value(): number {
-        return this._value;
-    }
+    
     get volume(): number {
-        return this._quantify * this._value;
+        return this.quantify * this.value;
     }
 
     get allInfos(): string {
@@ -36,36 +28,110 @@ class Negotiation {
     }
 }
 
+class Negotiations {
+    private negotiations: Array<Negotiation> = [];
+
+    add(negotiation: Negotiation): void {
+        this.negotiations.push(negotiation);
+    }
+
+    list(): ReadonlyArray<Negotiation> {
+        return this.negotiations;
+    }
+}
+
+ class View<Type> {
+    protected elementDOM: HTMLElement;
+
+    constructor(selectElement: string) {
+        this.elementDOM = document.querySelector(selectElement);
+    }
+
+    template(model: Type): string {
+        throw Error("Child class needs to modify content from inside 'template' method")
+    }
+
+    updateScreen(model: Type) {
+        this.elementDOM.innerHTML = this.template(model);
+    }
+ }
+
+class NegotiationView extends View<Negotiations> {
+    
+    template(model: Negotiations): string {
+        return `
+        <table class="table table-hover table-bordered">
+            <thead>
+                <th>DATA</th>
+                <th>QUANTIDADE</th>
+                <th>VALOR</th>
+            </thead>
+            <tbody>
+            ${model.list().map(negotiation => {
+                return `
+                    <tr>
+                        <td>
+                            ${new Intl.DateTimeFormat().format(negotiation.date)}
+                        </td>
+                        <td>
+                            ${negotiation.quantify}
+                        </td>
+                        <td>
+                            ${negotiation.value}
+                        </td>
+                    </tr>
+                `
+            }).join("")}
+            </tbody>
+        </table>
+    `;
+    }
+}
+
+class MensageView extends View<string> {
+    template(model: string): string {
+        return `
+            <p class=" alert alert-info">${model}</p>
+        `;
+    }
+}
+
 class NegotiationController {
-    private date: HTMLInputElement;
-    private quantify: HTMLInputElement;
-    private value: HTMLInputElement;
+    private inputDate: HTMLInputElement;
+    private inputQuantify: HTMLInputElement;
+    private inputValue: HTMLInputElement;
+    private negotiations = new Negotiations();
+    private negotiationsView = new NegotiationView("#negociacoesView");
+    private mensageView = new MensageView("#mensagemView");
 
     constructor() {
-        this.date = document.querySelector("#data");
-        this.quantify = document.querySelector("#quantidade");
-        this.value = document.querySelector("#valor");
+        this.inputDate = document.querySelector("#data");
+        this.inputQuantify = document.querySelector("#quantidade");
+        this.inputValue = document.querySelector("#valor");
+        this.negotiationsView.updateScreen(this.negotiations);
     }
 
     addNegotiation(): void {
         const negotiation = this.createNegotiation();
-        console.log(negotiation.allInfos);
+        this.negotiations.add(negotiation);
+        this.negotiationsView.updateScreen(this.negotiations);
+        this.mensageView.updateScreen("Negociação feita com sucesso!")
         this.clearForm();
     }
 
     createNegotiation(): Negotiation {
         const regex = /-/g;
-        const date = new Date(this.date.value.replace(regex, ","));
-        const quantify = parseInt(this.quantify.value);
-        const value = parseFloat(this.value.value);
+        const date = new Date(this.inputDate.value.replace(regex, ","));
+        const quantify = parseInt(this.inputQuantify.value);
+        const value = parseFloat(this.inputValue.value);
         return new Negotiation(date, quantify, value);
     }
 
     clearForm(): void {
-        this.date.value = "";
-        this.quantify.value = "";
-        this.value.value = "";
-        this.date.focus();
+        this.inputDate.value = "";
+        this.inputQuantify.value = "";
+        this.inputValue.value = "";
+        this.inputDate.focus();
     }
 }
 
