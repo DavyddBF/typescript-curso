@@ -28,18 +28,18 @@ class Negociacoes {
         return this.negociacoes;
     }
 }
-class View {
+class Visualizacao {
     constructor(seletorElemento) {
         this.elementoDOM = document.querySelector(seletorElemento);
     }
     template(modelo) {
-        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template");
+        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template'");
     }
     atualizaTela(modelo) {
         this.elementoDOM.innerHTML = this.template(modelo);
     }
 }
-class NegociacoesView extends View {
+class NegociacoesView extends Visualizacao {
     template(modelo) {
         return `
             <table class="table table-hover table-bordered">
@@ -69,7 +69,7 @@ class NegociacoesView extends View {
         `;
     }
 }
-class MensagemView extends View {
+class MensagemView extends Visualizacao {
     template(modelo) {
         return `
             <p class=" alert alert-info">${modelo}</p>

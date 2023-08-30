@@ -34,23 +34,23 @@ class Negociacoes {
     }
 }
 
-class View<Type> {
+class Visualizacao<Tipo> {
     protected elementoDOM: HTMLElement;
     
     constructor(seletorElemento: string) {
         this.elementoDOM = document.querySelector(seletorElemento);
     }
 
-    template(modelo: Type): string {
-        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template");
+    template(modelo: Tipo): string {
+        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template'");
     }
 
-    atualizaTela(modelo: Type): void {
+    atualizaTela(modelo: Tipo): void {
         this.elementoDOM.innerHTML = this.template(modelo);
     }
 }
 
-class NegociacoesView extends View<Negociacoes> {
+class NegociacoesView extends Visualizacao<Negociacoes> {
 
     template(modelo: Negociacoes): string {
         return `
@@ -82,7 +82,7 @@ class NegociacoesView extends View<Negociacoes> {
     }
 }
 
-class MensagemView extends View<string> {
+class MensagemView extends Visualizacao<string> {
 
     template(modelo: string): string {
         return `
