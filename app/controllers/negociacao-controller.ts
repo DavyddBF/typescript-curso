@@ -13,9 +13,9 @@ export class NegociacaoController {
     private mensagemView = new MensagemView("#mensagemView");
 
     constructor() {
-        this.inputData = document.querySelector("#data");
-        this.inputQuantidade = document.querySelector("#quantidade");
-        this.inputValor = document.querySelector("#valor");
+        this.inputData = document.querySelector("#data") as HTMLInputElement;
+        this.inputQuantidade = document.querySelector("#quantidade") as HTMLInputElement;
+        this.inputValor = document.querySelector("#valor") as HTMLInputElement;
         this.negociacoesView.atualiza(this.negociacoes);
     }
 
@@ -26,8 +26,7 @@ export class NegociacaoController {
             this.inputValor.value
         );
         if(!this.ehDiaUtil(negociacao.data)) {
-            this.mensagemView.atualiza("Negociações podem ser adiconadas somente em dias utéis!")
-
+            this.mensagemView.atualiza("Negociações podem ser adiconadas somente em dias utéis!");
             return;
         }
         this.negociacoes.adiciona(negociacao);
