@@ -14,6 +14,15 @@ class Negotiation {
         public readonly value: number
    ) {}
 
+   
+    public static createNegotiation(stringDate: string, stringQuantify: string, stringValue: string): Negotiation {
+        const regex = /-/g;
+        const date = new Date(stringDate.replace(regex, ","));
+        const quantify = parseInt(stringQuantify);
+        const value = parseFloat(stringValue);
+        return new Negotiation(date, quantify, value);
+    }
+
     get date(): Date {
         const date = new Date(this._date.getTime());
         return date;
@@ -31,69 +40,88 @@ class Negotiation {
 class Negotiations {
     private negotiations: Array<Negotiation> = [];
 
-    add(negotiation: Negotiation): void {
+    public add(negotiation: Negotiation): void {
         this.negotiations.push(negotiation);
     }
 
-    list(): ReadonlyArray<Negotiation> {
+    public list(): ReadonlyArray<Negotiation> {
         return this.negotiations;
     }
 }
 
- class View<Type> {
+abstract class View<Type> {
     protected elementDOM: HTMLElement;
+    private escapeOfScript: boolean = false;
 
-    constructor(selectElement: string) {
-        this.elementDOM = document.querySelector(selectElement);
+    constructor(selectElement: string, escapeOfScript?: boolean) {
+        const element = document.querySelector(selectElement);
+        if(element) this.elementDOM = element as HTMLElement;
+        else throw Error(`Seletor ${selectElement} não existe no DOM. Verifique o código!!`);
+
+        if(escapeOfScript) this.escapeOfScript = escapeOfScript;
     }
 
-    template(model: Type): string {
-        throw Error("Child class needs to modify content from inside 'template' method")
-    }
+    protected abstract template(model: Type): string;
 
-    updateScreen(model: Type) {
-        this.elementDOM.innerHTML = this.template(model);
+    public updateScreen(model: Type) {
+        let template = this.template(model);
+        if(this.escapeOfScript) template = template.replace(/<script>[\s\S]?*<\/script>/, "")
+        this.elementDOM.innerHTML = template;
     }
  }
 
 class NegotiationView extends View<Negotiations> {
     
-    template(model: Negotiations): string {
+    protected template(model: Negotiations): string {
         return `
-        <table class="table table-hover table-bordered">
-            <thead>
-                <th>DATA</th>
-                <th>QUANTIDADE</th>
-                <th>VALOR</th>
-            </thead>
-            <tbody>
-            ${model.list().map(negotiation => {
-                return `
-                    <tr>
-                        <td>
-                            ${new Intl.DateTimeFormat().format(negotiation.date)}
-                        </td>
-                        <td>
-                            ${negotiation.quantify}
-                        </td>
-                        <td>
-                            ${negotiation.value}
-                        </td>
-                    </tr>
-                `
-            }).join("")}
-            </tbody>
-        </table>
-    `;
+            <table class="table table-hover table-bordered">
+                <thead>
+                    <th>DATA</th>
+                    <th>QUANTIDADE</th>
+                    <th>VALOR</th>
+                </thead>
+                <tbody>
+                ${model.list().map(negotiation => {
+                    return `
+                        <tr>
+                            <td>
+                                ${this.formatDate(negotiation.date)}
+                            </td>
+                            <td>
+                                ${negotiation.quantify}
+                            </td>
+                            <td>
+                                ${negotiation.value}
+                            </td>
+                        </tr>
+                    `
+                }).join("")}
+                </tbody>
+            </table>
+        `;   
+    }
+
+    private formatDate(date: Date): string {
+        return new Intl.DateTimeFormat().format(date)
     }
 }
 
 class MensageView extends View<string> {
-    template(model: string): string {
+    protected template(model: string): string {
         return `
             <p class=" alert alert-info">${model}</p>
         `;
     }
+}
+
+enum DaysOfWeek {
+    SUNDAY    = 0,
+    MONDAY    = 1,
+    TUESDAY   = 2,
+    WEDNESDAY = 3,
+    THURSDAY  = 4,
+    FRIDAY    = 5,
+    SATURDAY  = 6
 }
 
 class NegotiationController {
@@ -105,40 +133,54 @@ class NegotiationController {
     private mensageView = new MensageView("#mensagemView");
 
     constructor() {
-        this.inputDate = document.querySelector("#data");
-        this.inputQuantify = document.querySelector("#quantidade");
-        this.inputValue = document.querySelector("#valor");
+        this.inputDate = document.querySelector("#data") as HTMLInputElement;
+        this.inputQuantify = document.querySelector("#quantidade") as HTMLInputElement;
+        this.inputValue = document.querySelector("#valor") as HTMLInputElement;
         this.negotiationsView.updateScreen(this.negotiations);
     }
 
     addNegotiation(): void {
-        const negotiation = this.createNegotiation();
+        const negotiation = Negotiation.createNegotiation(
+            this.inputDate.value,
+            this.inputQuantify.value,
+            this.inputValue.value
+        );
+
+        if(!this.isBusinessDay(negotiation.date)) {
+            this.mensageView.updateScreen("Negociações podem ser adiconadas somente em dias utéis!")
+            return;
+        }
+
         this.negotiations.add(negotiation);
-        this.negotiationsView.updateScreen(this.negotiations);
-        this.mensageView.updateScreen("Negociação feita com sucesso!")
         this.clearForm();
+        this.updateView();
     }
 
-    createNegotiation(): Negotiation {
-        const regex = /-/g;
-        const date = new Date(this.inputDate.value.replace(regex, ","));
-        const quantify = parseInt(this.inputQuantify.value);
-        const value = parseFloat(this.inputValue.value);
-        return new Negotiation(date, quantify, value);
+    private isBusinessDay(date: Date): boolean {
+        return date.getDay() > DaysOfWeek.SUNDAY && date.getDay() < DaysOfWeek.SATURDAY;
     }
 
-    clearForm(): void {
+    private clearForm(): void {
         this.inputDate.value = "";
         this.inputQuantify.value = "";
         this.inputValue.value = "";
         this.inputDate.focus();
+    }
+
+    private updateView(): void {
+        this.negotiationsView.updateScreen(this.negotiations);
+        this.mensageView.updateScreen("Negociação feita com sucesso!");
     }
 }
 
 const controller = new NegotiationController();
 const form = document.querySelector(".form");
 
-form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    controller.addNegotiation();
-});
+if(form) {
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        controller.addNegotiation();
+    });
+} else {
+    throw Error("Negociação não pôde ser inicializada devido erro no form. Possivelmente retornou 'null'")
+}
