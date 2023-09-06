@@ -10,6 +10,14 @@ export class Negociacao {
         public readonly quantidade: number,
         public readonly valor: number
     ) {}
+    
+    public static criaNegociacao(dataString: string, quantidadeString: string, valorString: string): Negociacao {
+        const expRegex = /-/g;
+        const date = new Date(dataString.replace(expRegex, ","));
+        const quantidade = parseInt(quantidadeString);
+        const valor = parseFloat(valorString);
+        return new Negociacao(date, quantidade, valor);
+    }
 
     get data(): Date {
         const data = new Date(this._data.getTime());

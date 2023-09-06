@@ -9,6 +9,13 @@ export class Negociacao {
         this.quantidade = quantidade;
         this.valor = valor;
     }
+    static criaNegociacao(dataString, quantidadeString, valorString) {
+        const expRegex = /-/g;
+        const date = new Date(dataString.replace(expRegex, ","));
+        const quantidade = parseInt(quantidadeString);
+        const valor = parseFloat(valorString);
+        return new Negociacao(date, quantidade, valor);
+    }
     get data() {
         const data = new Date(this._data.getTime());
         return data;
