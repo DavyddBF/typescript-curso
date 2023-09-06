@@ -8,6 +8,15 @@ class Negociacao {
         public readonly valor: number
     ) {}
 
+    
+    public static criaNegociacao(stringData: string, stringQuantidade: string, stringValor: string): Negociacao {
+        const regex = /-/g;
+        const data = new Date(stringData.replace(regex, ","));
+        const quantidade = parseInt(stringQuantidade);
+        const valor = parseFloat(stringValor);
+        return new Negociacao(data, quantidade, valor);
+    }
+
     get data(): Date {
         const data = new Date(this._data.getTime());
         return data;
@@ -25,34 +34,46 @@ class Negociacao {
 class Negociacoes {
     private negociacoes: Array<Negociacao> = [];
 
-    adiciona(negociacao: Negociacao): void {
+    public adiciona(negociacao: Negociacao): void {
         this.negociacoes.push(negociacao);
     }
 
-    lista(): ReadonlyArray<Negociacao> {
+    public lista(): ReadonlyArray<Negociacao> {
         return this.negociacoes;
     }
 }
 
-class Visualizacao<Tipo> {
+abstract class Visualizacao<Tipo> {
     protected elementoDOM: HTMLElement;
+    private escapeDeScripts: boolean = false;
     
-    constructor(seletorElemento: string) {
-        this.elementoDOM = document.querySelector(seletorElemento);
+    constructor(seletorElemento: string, escapeDeScripts?: boolean) {
+        const elemento = document.querySelector(seletorElemento);
+        if(elemento) {
+            this.elementoDOM = elemento as HTMLElement;
+        } else {
+            throw Error(`Seletor ${seletorElemento} não existe no DOM. Verifique o código!!`);
+        }
+
+        if(escapeDeScripts) {
+            this.escapeDeScripts = escapeDeScripts;
+        }
     }
 
-    template(modelo: Tipo): string {
-        throw Error("Classe filha precisa modificar o conteúdo de dentro do método 'template'");
-    }
+    protected abstract template(modelo: Tipo): string;
 
-    atualizaTela(modelo: Tipo): void {
-        this.elementoDOM.innerHTML = this.template(modelo);
+    public atualizaTela(modelo: Tipo): void {
+        let template = this.template(modelo);
+        if(this.escapeDeScripts) {
+            template = template.replace(/<script>[\s\S]?*<\/script>/, "")
+        }
+        this.elementoDOM.innerHTML = template;
     }
 }
 
 class NegociacoesView extends Visualizacao<Negociacoes> {
 
-    template(modelo: Negociacoes): string {
+    protected template(modelo: Negociacoes): string {
         return `
             <table class="table table-hover table-bordered">
                 <thead>
@@ -65,7 +86,7 @@ class NegociacoesView extends Visualizacao<Negociacoes> {
                     return `
                         <tr>
                             <td>
-                                ${new Intl.DateTimeFormat().format(negociacao.data)}
+                                ${this.formataData(negociacao.data)}
                             </td>
                             <td>
                                 ${negociacao.quantidade}
@@ -80,15 +101,29 @@ class NegociacoesView extends Visualizacao<Negociacoes> {
             </table>
         `;
     }
+
+    private formataData(data: Date): string {
+        return new Intl.DateTimeFormat().format(data);
+    }
 }
 
 class MensagemView extends Visualizacao<string> {
 
-    template(modelo: string): string {
+    protected template(modelo: string): string {
         return `
             <p class=" alert alert-info">${modelo}</p>
         `;
     }
+}
+
+enum DiasDaSemana {
+    DOMINGO = 0,
+    SEGUNDA = 1,
+    TERCA   = 2,
+    QUARTA  = 3,
+    QUINTA  = 4,
+    SEXTA   = 5,
+    SABADO  = 6
 }
 
 class NegociacaoControle {
@@ -100,40 +135,54 @@ class NegociacaoControle {
     private mensagemView = new MensagemView("#mensagemView");
 
     constructor() {
-        this.inputData = document.querySelector("#data");
-        this.inputQuantidade = document.querySelector("#quantidade");
-        this.inputValor = document.querySelector("#valor");
+        this.inputData = document.querySelector("#data") as HTMLInputElement;
+        this.inputQuantidade = document.querySelector("#quantidade") as HTMLInputElement;
+        this.inputValor = document.querySelector("#valor") as HTMLInputElement;
         this.negociacoesView.atualizaTela(this.negociacoes);
     }
 
-    adiciona(): void {
-        const negociacao = this.criaNegociacao();
+    public adiciona(): void {
+        const negociacao = Negociacao.criaNegociacao(
+            this.inputData.value,
+            this.inputQuantidade.value,
+            this.inputValor.value
+        );
+
+        if(!this.ehDiaUtil(negociacao.data)) {
+            this.mensagemView.atualizaTela("Negociações podem ser adiconadas somente em dias utéis!");
+            return;
+        }
+
         this.negociacoes.adiciona(negociacao);
-        this.negociacoesView.atualizaTela(this.negociacoes);
-        this.mensagemView.atualizaTela("Negociação feita com sucesso!");
         this.limpaFormulario();
+        this.atualizaView();
     }
 
-    criaNegociacao(): Negociacao {
-        const regex = /-/g;
-        const data = new Date(this.inputData.value.replace(regex, ","));
-        const quantidade = parseInt(this.inputQuantidade.value);
-        const valor = parseFloat(this.inputValor.value);
-        return new Negociacao(data, quantidade, valor);
+    private ehDiaUtil(data: Date): boolean {
+        return data.getDay() > DiasDaSemana.DOMINGO && data.getDay() < DiasDaSemana.SABADO;
     }
 
-    limpaFormulario() {
+    private limpaFormulario() {
         this.inputData.value = "";
         this.inputQuantidade.value = "";
         this.inputValor.value = "";
         this.inputData.focus();
+    }
+
+    private atualizaView(): void {
+        this.negociacoesView.atualizaTela(this.negociacoes);
+        this.mensagemView.atualizaTela("Negociação feita com sucesso!");
     }
 }
 
 const controle = new NegociacaoControle();
 const formulario = document.querySelector(".form");
 
-formulario.addEventListener("submit", (evento) => {
-    evento.preventDefault();
-    controle.adiciona();
-});
+if(formulario) {
+    formulario.addEventListener("submit", (evento) => {
+        evento.preventDefault();
+        controle.adiciona();
+    });
+} else {
+    throw Error("Negociação não pôde ser inicializada devido erro no form. Possivelmente retornou 'null'")
+}

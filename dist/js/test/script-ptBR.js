@@ -1,5 +1,3 @@
-// Código completo num arquivo só. Aqui fiz para recriar o código.
-// Não está sendo chamado em nenhum lugar.
 class Negociacao {
     constructor(_data, quantidade, valor) {
         this._data = _data;
