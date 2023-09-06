@@ -1,8 +1,3 @@
-/*
-    Classe Negociação que é exportada para ser usada em ../app.ts
-    Classe é o exato modelo da negociação, onde seus valores apenas podem entrar, mas não sair (Não pode ser removido nem modificado)
-    
-*/
 export class Negociacao {
     constructor(_data, quantidade, valor) {
         this._data = _data;

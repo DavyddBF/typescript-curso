@@ -1,11 +1,3 @@
-// Complete code in a single file. Here I did to recreate the code.
-// Not being called anywhere.
-/* This code, unlike the code in pt-br, will be in English. Although I speak Portuguese
-   I wanted to write a code in English too!
-
-   Esse código, diferente do código em pt-br, vai estar em ingles. Apesar que eu falo português
-   eu queria escrever um código em inglês também!
-*/
 class Negotiation {
     constructor(_date, quantify, value) {
         this._date = _date;
