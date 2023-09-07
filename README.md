@@ -1,6 +1,6 @@
 # Sistema de Negociações
 
-Este é um projeto simples de sistema de negociações financeiras desenvolvido em TypeScript. Ele permite que os usuários registrem negociações, verifiquem se ocorrem em dias úteis e visualizem suas negociações registradas.
+Este é um projeto simples de sistema de negociações desenvolvido em TypeScript. Ele permite que os usuários registrem negociações, verifiquem se ocorrem em dias úteis e visualizem suas negociações registradas. Tudo isso foi feito para meu treinamento de TypeScript, meus primeiros passos na linguagem!
 
 ## Visão Geral do Código
 
