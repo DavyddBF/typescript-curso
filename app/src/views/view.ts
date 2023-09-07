@@ -1,3 +1,5 @@
+import { logarTempoDeExecucao } from "../decorators/logTemp.js";
+
 export abstract class View<Type> {
     protected elemento: HTMLElement;
     private escapeScripts: boolean = false;
@@ -17,10 +19,11 @@ export abstract class View<Type> {
 
     protected abstract template(modelo: Type): string;
 
+    @logarTempoDeExecucao()
     public atualiza(modelo: Type): void {
         let template = this.template(modelo);
         if(this.escapeScripts) {
-            template = template.replace(/<script>[\s\S]?*<\/script>/, "");
+            template = template.replace(/<script>[\s\S]*?<\/script>/, "");
         }
         this.elemento.innerHTML = template;
     }
