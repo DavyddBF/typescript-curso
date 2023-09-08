@@ -23,7 +23,7 @@ export class NegociacaoController {
     adiciona() {
         const negociacao = Negociacao.criaNegociacao(this.inputData.value, this.inputQuantidade.value, this.inputValor.value);
         if (!this.ehDiaUtil(negociacao.data)) {
-            this.mensagemView.atualiza("Negociações podem ser adiconadas somente em dias utéis!");
+            this.mensagemView.atualiza("Negociações podem ser adicionadas somente em dias utéis!");
             return;
         }
         this.negociacoes.adiciona(negociacao);
@@ -45,5 +45,5 @@ export class NegociacaoController {
     }
 }
 __decorate([
-    logarTempoDeExecucao()
+    logarTempoDeExecucao(true)
 ], NegociacaoController.prototype, "adiciona", null);
