@@ -1,3 +1,4 @@
+import { inspecionar } from "../decorators/inspecionar.js";
 import { logarTempoDeExecucao } from "../decorators/logTemp.js";
 
 export abstract class View<Type> {
@@ -16,10 +17,9 @@ export abstract class View<Type> {
             this.escapeScripts = escapeScripts;
         }
     }
-
-    protected abstract template(modelo: Type): string;
-
+    
     @logarTempoDeExecucao()
+    @inspecionar()
     public atualiza(modelo: Type): void {
         let template = this.template(modelo);
         if(this.escapeScripts) {
@@ -27,4 +27,6 @@ export abstract class View<Type> {
         }
         this.elemento.innerHTML = template;
     }
+
+    protected abstract template(modelo: Type): string;
 }
